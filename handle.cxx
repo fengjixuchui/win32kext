@@ -88,6 +88,19 @@ GetUserTypeDesc(
 }
 
 BOOL
+IsUserTypeValid(
+	IN UCHAR Type
+)
+{
+	for (int i = 0; i < _countof(gGdiTypeDesc); i++) {
+		if (gUserTypeDesc[i].Type == Type) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+BOOL
 UserObjectGetEntry(
 	IN UINT32 Index,
 	OUT PHANDLEENTRY pphe,
@@ -211,6 +224,19 @@ GetGdiTypeDesc(
 		}
 	}
 	return lpTypeDesc;
+}
+
+BOOL
+IsGdiTypeValid(
+	IN UCHAR Type
+)
+{
+	for (int i = 0; i < _countof(gGdiTypeDesc); i++) {
+		if (gGdiTypeDesc[i].Type == Type) {
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 
 BOOL
@@ -507,8 +533,21 @@ DumpGdiHandle(
 	32       24       16        8       0
 	*/
 
-	UINT32 TotalHandleCounts = GetTotalHandleCounts();
+	UINT32 TotalHandleCounts;
 	UINT32 HandleV;
+
+	//
+	// Check type
+	//
+
+	if (Context->Flags & OPT_FL_TYPE) {
+		if (!IsGdiTypeValid(Context->Type)) {
+			dprintf("Invalid Gdi object type\n");
+			return FALSE;
+		}
+	}
+
+	TotalHandleCounts = GetTotalHandleCounts();
 
 	if (!TotalHandleCounts) {
 		dprintf("Have none gdi handle\n");
@@ -802,6 +841,17 @@ DumpUserHandles(
 {
 	UINT32 TotalHandleCounts;
 	UINT32 HandleV;
+
+	//
+	// Check type
+	//
+
+	if (Context->Flags & OPT_FL_TYPE) {
+		if (!IsUserTypeValid(Context->Type)) {
+			dprintf("Invalid user object type\n");
+			return FALSE;
+		}
+	}
 
 	g_ExtControl->Execute(DEBUG_OUTCTL_IGNORE, ".reload nt", DEBUG_EXECUTE_NOT_LOGGED);
 	g_ExtControl->Execute(DEBUG_OUTCTL_IGNORE, ".reload win32kbase.sys", DEBUG_EXECUTE_NOT_LOGGED);
